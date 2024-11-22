@@ -19,6 +19,7 @@ private:
 
     std::vector<Polygon> frontPolygons;
     std::vector<Polygon> backPolygons;
+    std::vector<Polygon> coplanarPolygons; 
 
     for (int i = 0; i < polygons.size(); i++){
       const Polygon& polygon = polygons[i];
@@ -26,17 +27,26 @@ private:
         frontPolygons.push_back(polygon);
       } else if (polygon.isBackOf(A, B, C, D)){
         backPolygons.push_back(polygon);
-      } else {
+      } else if (polygon.crossesPlane(A, B, C, D)) {
         Polygon front, back;
         polygon.divide(A, B, C, D, front, back);
         frontPolygons.push_back(front);
         backPolygons.push_back(back);
+      } else {
+        // En caso de que exista un polígono coplanar
+        coplanarPolygons.push_back(polygon);
       }
     }
     
     // Crea nodo actual
     BSPTreeNode* node = new BSPTreeNode(A, B, C, D);
+    
     node->polygons.push_back(partition);
+       
+    // Almacena los poligonos coplanares en el nodo actual
+    for (const auto& coplanar : coplanarPolygons) {
+      node->polygons.push_back(coplanar);
+    }
 
     // Recursividad
     node->front = buildBSPTree(frontPolygons);
